@@ -9,11 +9,16 @@ class BooksBasicSpider(scrapy.Spider):
     def parse(self, response):
         books = response.xpath('//h3')
         # books = response.css('h3')
+        cut_tag = "../"
         for book in books:
             yield {
                 'Title': book.xpath('.//a/@title').get(),
-                'URL': book.xpath('.//a/@href').get()
+                'URL': "https://books.toscrape.com/catalogue/" + str(book.xpath('.//a/@href').get()).replace(cut_tag, "")
                 # 'Title': book.css('a::attr(title)').get(),
                 # 'URL': book.css('a::attr(href)').get()
             }
-        pass
+
+        # リンクをたどる（ページング）
+        next_page = response.xpath('//li[@class="next"]/a/@href').get()
+        if next_page:
+            yield response.follow(url=next_page, callback=self.parse)
